@@ -124,10 +124,6 @@ function getCarType(type) {
     return "Unknown";
   }
 
-  if (type.length === 0) {
-    return "Unknown";
-  }
-  
   const normalizedType = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
   
   switch (normalizedType) {
