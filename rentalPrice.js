@@ -15,7 +15,6 @@ const HIGH_SEASON_MULTIPLIER = 1.15;
 const LONG_RENTAL_DISCOUNT = 0.9;
 const INEXPERIENCED_DRIVER_MULTIPLIER = 1.3;
 const NOVICE_DRIVER_HIGH_SEASON_DAILY_SURCHARGE = 15;
-const WEEKEND_MULTIPLIER = 1.05;
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -34,7 +33,6 @@ const SEASONS = {
 function price(pickup, dropoff, pickupDate, dropoffDate, type, age, licenseYears) {
   const carType = getCarType(type);
   const rentalDays = calculateRentalDays(pickupDate, dropoffDate);
-  const weekendDays = calculateWeekendDays(pickupDate, dropoffDate);
   const season = getSeason(pickupDate, dropoffDate);
 
   // Validate driver eligibility
@@ -44,7 +42,7 @@ function price(pickup, dropoff, pickupDate, dropoffDate, type, age, licenseYears
   }
 
   // Calculate base price
-  let rentalPrice = calculateBasePrice(age, rentalDays, weekendDays);
+  let rentalPrice = calculateBasePrice(age, rentalDays);
 
   // Apply car type and age-based surcharges
   rentalPrice = applyRacerSurcharge(rentalPrice, carType, age, season);
@@ -80,10 +78,8 @@ function validateDriverEligibility(age, licenseYears, carType) {
   return null;
 }
 
-function calculateBasePrice(age, rentalDays, weekendDays) {
-  const weekdayDays = rentalDays - weekendDays;
-
-  return (age * weekdayDays) + (age * WEEKEND_MULTIPLIER * weekendDays);
+function calculateBasePrice(age, rentalDays) {
+  return age * rentalDays;
 }
 
 function applyRacerSurcharge(rentalPrice, carType, age, season) {
@@ -124,10 +120,10 @@ function applyLongRentalDiscount(rentalPrice, rentalDays, season) {
 }
 
 function getCarType(type) {
-  if (!type || typeof type !== 'string' || type.length === 0) {
+  if (!type || typeof type !== 'string') {
     return "Unknown";
   }
-  
+
   const normalizedType = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
   
   switch (normalizedType) {
@@ -149,26 +145,6 @@ function calculateRentalDays(pickupDate, dropoffDate) {
   const secondDate = new Date(dropoffDate);
 
   return Math.round(Math.abs((firstDate - secondDate) / MILLISECONDS_PER_DAY)) + 1;
-}
-
-function calculateWeekendDays(pickupDate, dropoffDate) {
-  const firstDate = new Date(pickupDate);
-  const secondDate = new Date(dropoffDate);
-  const startDate = firstDate <= secondDate ? firstDate : secondDate;
-  const endDate = firstDate <= secondDate ? secondDate : firstDate;
-
-  let weekendDays = 0;
-  const currentDate = new Date(startDate);
-
-  while (currentDate <= endDate) {
-    const day = currentDate.getDay();
-    if (day === 0 || day === 6) {
-      weekendDays += 1;
-    }
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  return weekendDays;
 }
 
 function getSeason(pickupDate, dropoffDate) {
